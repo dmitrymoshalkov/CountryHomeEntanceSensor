@@ -6,10 +6,11 @@
 #include <Bounce2.h>
 #include <avr/wdt.h>
 
+#define NODE_ID 6
+
 #define COMPARE_TEMP 1 // Send temperature only if changed? 1 = Yes 0 = No
 #define MAX_ATTACHED_DS18B20 16
 
-#define NODE_ID 6
 
 #define CHILD_ID_TEMPERATURE 1  //DHT22
 #define CHILD_ID_DOOR 2
