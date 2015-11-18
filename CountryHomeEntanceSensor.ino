@@ -6,6 +6,8 @@
 #include <Bounce2.h>
 #include <avr/wdt.h>
 
+
+//Идентификатор ноды
 #define NODE_ID 6
 
 #define COMPARE_TEMP 1 // Send temperature only if changed? 1 = Yes 0 = No
