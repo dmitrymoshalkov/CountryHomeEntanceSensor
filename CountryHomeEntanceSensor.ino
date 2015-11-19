@@ -11,7 +11,7 @@
 #define NODE_ID 6
 
 
-#define MAX_ATTACHED_DS18B20 16
+
 
 #define RADIO_RESET_DELAY_TIME 20 //Задержка между сообщениями
 #define MESSAGE_ACK_RETRY_COUNT 5  //количество попыток отсылки сообщения с запросом подтверждения
@@ -75,11 +75,14 @@ void setup() {
 
   // Send the sketch version information to the gateway and Controller
   gw.sendSketchInfo("Country home entrance sensor", "1.0");
+        gw.wait(RADIO_RESET_DELAY_TIME);   
 
    metric = gw.getConfig().isMetric;
 
   // Present all sensors to controller
      gw.present(CHILD_ID_TEMPERATURE, S_TEMP);
+        gw.wait(RADIO_RESET_DELAY_TIME);   
+
           // Fetch temperatures from Dallas sensors
           sensors.requestTemperatures(); 
           float temperature = static_cast<float>(static_cast<int> (sensors.getTempCByIndex(0) * 10.)) / 10.;
@@ -94,36 +97,43 @@ void setup() {
   debouncer.interval(5);
  
    gw.present(CHILD_ID_DOOR, S_DOOR); 
-  
+        gw.wait(RADIO_RESET_DELAY_TIME);     
   
   //Motion sensor
   pinMode(MOTION_SENSOR_DIGITAL_PIN, INPUT);      // sets the motion sensor digital pin as input
   // Register all sensors to gw (they will be created as child devices)
   gw.present(CHILD_ID_MOTION, S_MOTION);
-  
+        gw.wait(RADIO_RESET_DELAY_TIME);   
+
   
   //buzzer
         pinMode(BUZZER_DIGITAL_PIN,OUTPUT);
      digitalWrite(BUZZER_DIGITAL_PIN,HIGH); 
      gw.present(BUZZER_CHILD_ID, S_LIGHT); 
+        gw.wait(RADIO_RESET_DELAY_TIME);        
 
 //reboot sensor command
      gw.present(REBOOT_CHILD_ID, S_BINARY); 
+        gw.wait(RADIO_RESET_DELAY_TIME);        
   
 //disable-enable motion sensor
      gw.present(DISABLE_MOTION_SENSOR_CHILD_ID, S_MOTION); 
+        gw.wait(RADIO_RESET_DELAY_TIME);        
 
  //reget sensor values
   gw.present(RECHECK_SENSOR_VALUES, S_LIGHT);     
+        gw.wait(RADIO_RESET_DELAY_TIME);   
+
 
 // Send initial state of sensors to gateway  
   debouncer.update();
   int value = debouncer.read();
   gw.send(DoorMsg.set(value==HIGH ? 1 : 0));  
-  
+        gw.wait(RADIO_RESET_DELAY_TIME);   
+          
   boolean motion = digitalRead(MOTION_SENSOR_DIGITAL_PIN) == HIGH; 
   gw.send(MotionMsg.set(motion ? "1" : "0" ));  // Send motion value to gw
-  
+        gw.wait(RADIO_RESET_DELAY_TIME);     
 
   
     //Enable watchdog timer
