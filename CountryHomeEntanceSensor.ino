@@ -13,6 +13,8 @@
 
 #define MAX_ATTACHED_DS18B20 16
 
+#define RADIO_RESET_DELAY_TIME 20 //Задержка между сообщениями
+#define MESSAGE_ACK_RETRY_COUNT 5  //количество попыток отсылки сообщения с запросом подтверждения
 
 #define CHILD_ID_TEMPERATURE 1  //DHT22
 #define CHILD_ID_DOOR 2
@@ -44,6 +46,10 @@ unsigned long MSsensorInterval=60000;
 
 boolean boolMotionSensorDisabled = false;
 boolean boolRecheckSensorValues = false;
+
+boolean gotAck=false; //подтверждение от гейта о получении сообщения 
+int iCount = MESSAGE_ACK_RETRY_COUNT;
+
 
 OneWire oneWire(TEMPERATURE_SENSOR_DIGITAL_PIN); // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 DallasTemperature sensors(&oneWire); // Pass the oneWire reference to Dallas Temperature. 
@@ -136,9 +142,21 @@ void loop() {
  {
   boolean motion = digitalRead(MOTION_SENSOR_DIGITAL_PIN) == HIGH; 
    if (lastMotion != motion || boolRecheckSensorValues) {
+
+    //Отсылаем состояние сенсора с подтверждением получения
+    iCount = MESSAGE_ACK_RETRY_COUNT;
+
+    while( !gotAck && iCount > 0 )
+    {
+      gw.send(MotionMsg.set(motion ? "1" : "0" ), true);  // Send motion value to gw
+      gw.wait(RADIO_RESET_DELAY_TIME);
+      iCount--;
+    }
+    gotAck = false;
+
     Serial.println("Motion detected");
   lastMotion = motion;     
-   gw.send(MotionMsg.set(motion ? "1" : "0" ));  // Send motion value to gw
+
   }
 }
   
@@ -150,8 +168,18 @@ checkTemp();
   int value = debouncer.read();
  
   if (value != oldDebouncerState || boolRecheckSensorValues) {
-     // Send in the new value
-     gw.send(DoorMsg.set(value==HIGH ? 1 : 0));
+
+    //Отсылаем состояние сенсора с подтверждением получения
+    iCount = MESSAGE_ACK_RETRY_COUNT;
+
+    while( !gotAck && iCount > 0 )
+    {
+      gw.send(DoorMsg.set(value==HIGH ? 1 : 0), true); // Send motion value to gw
+      gw.wait(RADIO_RESET_DELAY_TIME);
+      iCount--;
+    }
+    gotAck = false;
+
      oldDebouncerState = value;
              Serial.print("Door: ");
         Serial.println(value);
@@ -218,17 +246,26 @@ void reportMotionSensorState()
 }
 
 void incomingMessage(const MyMessage &message) {
-  // We only expect one type of message from controller. But we better check anyway.
+
+
+    
+    if (message.isAck())
+    {
+      gotAck = true;
+      return;
+    }
 
     if ( message.sensor == BUZZER_CHILD_ID ) {
      digitalWrite(BUZZER_DIGITAL_PIN, message.getBool()?RELAY_OFF:RELAY_ON);
 
      }
+
     if ( message.sensor == REBOOT_CHILD_ID ) {
              wdt_enable(WDTO_30MS);
               while(1) {};
 
      }
+
      if ( message.sensor == DISABLE_MOTION_SENSOR_CHILD_ID ) {
          
          if (message.getBool() == true)
