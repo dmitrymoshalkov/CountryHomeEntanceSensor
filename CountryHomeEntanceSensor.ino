@@ -10,7 +10,7 @@
 //Идентификатор ноды
 #define NODE_ID 6
 
-#define COMPARE_TEMP 1 // Send temperature only if changed? 1 = Yes 0 = No
+
 #define MAX_ATTACHED_DS18B20 16
 
 
@@ -21,6 +21,7 @@
 
 #define REBOOT_CHILD_ID 100
 #define DISABLE_MOTION_SENSOR_CHILD_ID 101
+#define RECHECK_SENSOR_VALUES          102
 
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
