@@ -43,6 +43,7 @@ unsigned long previousMSMillis=0;
 unsigned long MSsensorInterval=300000;
 
 boolean boolMotionSensorDisabled = false;
+boolean boolRecheckSensorValues = false;
 
 OneWire oneWire(TEMPERATURE_SENSOR_DIGITAL_PIN); // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 DallasTemperature sensors(&oneWire); // Pass the oneWire reference to Dallas Temperature. 
@@ -106,6 +107,9 @@ void setup() {
 //disable-enable motion sensor
      gw.present(DISABLE_MOTION_SENSOR_CHILD_ID, S_LIGHT); 
 
+ //reget sensor values
+  gw.present(RECHECK_SENSOR_VALUES, S_LIGHT);     
+
 // Send initial state of sensors to gateway  
   debouncer.update();
   int value = debouncer.read();
@@ -131,7 +135,7 @@ void loop() {
   if ( !boolMotionSensorDisabled )
  {
   boolean motion = digitalRead(MOTION_SENSOR_DIGITAL_PIN) == HIGH; 
-   if (lastMotion != motion) {
+   if (lastMotion != motion || boolRecheckSensorValues) {
     Serial.println("Motion detected");
   lastMotion = motion;     
    gw.send(MotionMsg.set(motion ? "1" : "0" ));  // Send motion value to gw
@@ -145,7 +149,7 @@ checkTemp();
   // Get the update value
   int value = debouncer.read();
  
-  if (value != oldDebouncerState) {
+  if (value != oldDebouncerState || boolRecheckSensorValues) {
      // Send in the new value
      gw.send(DoorMsg.set(value==HIGH ? 1 : 0));
      oldDebouncerState = value;
@@ -154,6 +158,11 @@ checkTemp();
   }
 
   reportMotionSensorState();
+
+      if (boolRecheckSensorValues)
+      {
+       boolRecheckSensorValues = false;
+      }
 
     // Alway process incoming messages whenever possible
     gw.process();
@@ -167,7 +176,7 @@ void checkTemp()
 {
 
     unsigned long currentTempMillis = millis();
-    if(currentTempMillis - previousTempMillis > TempsensorInterval) {
+    if(currentTempMillis - previousTempMillis > TempsensorInterval || boolRecheckSensorValues) {
         // Save the current millis
         previousTempMillis = currentTempMillis;
         // take action here:
@@ -196,7 +205,7 @@ void reportMotionSensorState()
 {
 
     unsigned long currentMSMillis = millis();
-    if(currentMSMillis - previousMSMillis > MSsensorInterval) {
+    if(currentMSMillis - previousMSMillis > MSsensorInterval || boolRecheckSensorValues) {
         // Save the current millis
         previousMSMillis = currentMSMillis;
         // take action here:
@@ -232,6 +241,15 @@ void incomingMessage(const MyMessage &message) {
          }
 
      }
+
+    if ( message.sensor == RECHECK_SENSOR_VALUES ) {
+         
+         if (message.getBool() == true)
+         {
+            boolRecheckSensorValues = true;
+         }
+
+     }       
         return;      
 } 
 
