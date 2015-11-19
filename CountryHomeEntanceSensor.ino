@@ -40,7 +40,7 @@ int oldDebouncerState=-1;
 boolean lastMotion=false;
 
 unsigned long previousMSMillis=0;
-unsigned long MSsensorInterval=300000;
+unsigned long MSsensorInterval=60000;
 
 boolean boolMotionSensorDisabled = false;
 boolean boolRecheckSensorValues = false;
@@ -55,7 +55,7 @@ MySensor gw;
 MyMessage TempMsg(CHILD_ID_TEMPERATURE, V_TEMP);
 MyMessage DoorMsg(CHILD_ID_DOOR, V_TRIPPED);
 MyMessage MotionMsg(CHILD_ID_MOTION, V_TRIPPED);
-MyMessage MotionStateMsg(DISABLE_MOTION_SENSOR_CHILD_ID, V_TRIPPED);
+MyMessage MotionStateMsg(DISABLE_MOTION_SENSOR_CHILD_ID, V_ARMED);
 
 void setup() {
  
@@ -105,7 +105,7 @@ void setup() {
      gw.present(REBOOT_CHILD_ID, S_BINARY); 
   
 //disable-enable motion sensor
-     gw.present(DISABLE_MOTION_SENSOR_CHILD_ID, S_LIGHT); 
+     gw.present(DISABLE_MOTION_SENSOR_CHILD_ID, S_MOTION); 
 
  //reget sensor values
   gw.present(RECHECK_SENSOR_VALUES, S_LIGHT);     
