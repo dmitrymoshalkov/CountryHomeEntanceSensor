@@ -68,8 +68,7 @@ void setup() {
   // requestTemperatures() will not block current thread
  // sensors.setWaitForConversion(true);
 
-      Serial.begin(115200);
-    Serial.println("Begin setup");
+
     // Initialize library and add callback for incoming messages
     gw.begin(incomingMessage, NODE_ID, false);
 
@@ -139,7 +138,7 @@ void setup() {
     //Enable watchdog timer
     wdt_enable(WDTO_8S);
     
-    Serial.println("End setup");  
+
 
 }
 
@@ -164,7 +163,7 @@ void loop() {
     }
     gotAck = false;
 
-    Serial.println("Motion detected");
+
   lastMotion = motion;     
 
   }
@@ -191,8 +190,7 @@ checkTemp();
     gotAck = false;
 
      oldDebouncerState = value;
-             Serial.print("Door: ");
-        Serial.println(value);
+
   }
 
   reportMotionSensorState();
@@ -225,8 +223,6 @@ void checkTemp()
        // float temperature = static_cast<float>(static_cast<int>((gw.getConfig().isMetric?sensors.getTempCByIndex(0):sensors.getTempFByIndex(0)) * 10.)) / 10.;
         float temperature = static_cast<float>(static_cast<int> (sensors.getTempCByIndex(0) * 10.)) / 10.;
 
-        Serial.print("Temp: ");
-        Serial.println(temperature);
         if (temperature != lastTemp) {
             gw.send(TempMsg.set(temperature,1));
             lastTemp = temperature;
@@ -287,6 +283,7 @@ void incomingMessage(const MyMessage &message) {
             boolMotionSensorDisabled = false;
          }
 
+         gw.wait(RADIO_RESET_DELAY_TIME); 
          gw.send(MotionStateMsg.set(boolMotionSensorDisabled ? "1" : "0" )); 
 
      }
